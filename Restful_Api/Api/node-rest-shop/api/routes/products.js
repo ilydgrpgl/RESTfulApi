@@ -3,7 +3,9 @@ const express =require('express');
 const router= express.Router();
 const mongoose = require('mongoose');
 const multer= require('multer');
+const checkAuth =require('../middleware/check-auth');
 //const upload= multer({dest: 'uploads/'});// gelen tüm dosyaları deoplayacağı klasör. ststic dosyaya çeviriyoruz.
+
 
 
 //Nereye kaydedileceği
@@ -72,8 +74,13 @@ router.get('/', (req, res, next)=> {
     });
 
 
-router.post('/',upload.single('productImage'), (req, res, next) => {
+router.post('/', checkAuth, upload.single('productImage'), (req, res, next) => {
     console.log(req.file);
+    if (!req.file) {
+        return res.status(400).json({
+            message: 'No file uploaded'
+        });
+    }
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
@@ -136,7 +143,7 @@ router.get('/:productId', (req, res, next) => {
 });
 
 
-    router.patch('/:productId', (req, res, next)=> {
+    router.patch('/:productId', checkAuth, (req, res, next)=> {
         const id= req.params.productId;
         const updateOps= {};
         for(const ops of req.body)
@@ -162,7 +169,7 @@ router.get('/:productId', (req, res, next) => {
         });
         });
         
-        router.delete('/:productId', (req, res, next) => {
+        router.delete('/:productId', checkAuth,(req, res, next) => {
             const id = req.params.productId;
             Product.deleteOne({ _id: id })  // remove yerine deleteOne kullanılıyor
                 .exec()
